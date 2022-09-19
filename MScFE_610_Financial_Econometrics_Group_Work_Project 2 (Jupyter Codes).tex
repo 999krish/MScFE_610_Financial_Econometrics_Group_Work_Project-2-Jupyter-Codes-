@@ -1,1 +1,475 @@
-# **1. Heteroskedasticity**
+MScFE_610_Financial_Econometrics_Group_Work_Project 2 (Jupyter Notebook)
+1. Heteroskedasticity
+Definition: Heteroskedasticity: What it is
+
+Heteroskedasticity refers to events or circumstances whereby the residuals' variances are observed to be unequal across a range of measured values. An example of heteroskedasticity can be observed by the uneven scattering of the residuals when we perform a regression analysis. Known as the error term, heteroskedasticity is a phenomenon prone by models with a huge range of values. In statistics, heteroskedasticity might be problematic, as regressions entailing ordinary least squares (OLS) hold the assumption that residuals are obtained from populations inheriting constant variance.
+
+Demonstration & Diagram: Identifying heteroskedasticity using data and graphical visualisation
+
+To look for heteroskedasticity, it’s necessary to first run a regression and analyze the residuals. One of the most common ways of checking for heteroskedasticity is by plotting a graph of the residuals.
+
+import numpy as np
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import pandas as pd
+#
+np.random.seed(123)
+#
+N = 200
+beta_vec = np.array([20, 10, -6])
+#
+x1 = np.linspace(start = 0, stop = 5, num = N)
+x2 = np.random.choice(np.linspace(start = 3, stop = 17, num = 80), size = N, replace = True)
+e  = np.random.normal(loc = 0, scale = list(range(1, N + 1)), size = N)
+#
+x_mat = sm.add_constant(np.column_stack((x1, x2)))
+#
+y = np.dot(x_mat, beta_vec) + e
+#
+data_mat = pd.DataFrame(np.column_stack([y, x1, x2]), columns = ["y", "x1", "x2"])
+import numpy as np
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import pandas as pd
+#
+np.random.seed(123)
+#
+N = 200
+beta_vec = np.array([20, 10, -6])
+#
+x1 = np.linspace(start = 0, stop = 5, num = N)
+x2 = np.random.choice(np.linspace(start = 3, stop = 17, num = 80), size = N, replace = True)
+e  = np.random.normal(loc = 0, scale = list(range(1, N + 1)), size = N)
+#
+x_mat = sm.add_constant(np.column_stack((x1, x2)))
+#
+y = np.dot(x_mat, beta_vec) + e
+#
+data_mat = pd.DataFrame(np.column_stack([y, x1, x2]), columns = ["y", "x1", "x2"])
+mdl_1 = smf.ols(formula = "y ~ x1 + x2", data = data_mat)
+print(np.round(mdl_1.fit().summary2().tables[1], 5))
+mdl_1 = smf.ols(formula = "y ~ x1 + x2", data = data_mat)
+print(np.round(mdl_1.fit().summary2().tables[1], 5))
+              Coef.  Std.Err.        t    P>|t|    [0.025    0.975]
+Intercept  26.68842  28.71633  0.92938  0.35383 -29.94245  83.31928
+x1          2.88314   6.31740  0.45638  0.64862  -9.57527  15.34156
+x2         -3.95521   2.14688 -1.84231  0.06693  -8.18902   0.27860
+import matplotlib.pyplot as plt
+#
+fig = plt.figure(num = 0, figsize = (18, 12))
+plot_opts = dict(linestyle = "None", marker = ".", color = "blue", markerfacecolor = "blue")
+_ = fig.add_subplot(2, 2, 1).plot(mdl_1.fit().resid, **plot_opts)
+_ = plt.title("Figure 1: Residuals Plot")
+_ = plt.tight_layout()
+plt.show()
+import matplotlib.pyplot as plt
+#
+fig = plt.figure(num = 0, figsize = (18, 12))
+plot_opts = dict(linestyle = "None", marker = ".", color = "blue", markerfacecolor = "blue")
+_ = fig.add_subplot(2, 2, 1).plot(mdl_1.fit().resid, **plot_opts)
+_ = plt.title("Figure 1: Residuals Plot")
+_ = plt.tight_layout()
+plt.show()
+
+__Diagnosis: How to recognize or test that Heteroskedasticity exists__ 
+__Diagnosis: How to recognize or test that Heteroskedasticity exists__ 
+If we look at Figure 1, we would have observed that the residuals are scattered unevenly, resembling a cone shape in the residual plot (some may call it fan shape). This is an indication of heteroskedasticity’s presence. Such regressions often display a pattern depicting residuals’ variance increasing along the fitted values (hence you see it diverges from one another).
+
+Using statistical test method, we can test for heteroskedasticity using the Breusch–Pagan Test.
+
+BP_t = sm_diagnostic.het_breuschpagan(resid = mdl_1.fit().resid, exog_het = mdl_1.exog)
+print(pd.DataFrame(lzip(['LM statistic', 'p-value',  'F-value', 'F: p-value'], BP_t)))
+              0             1
+0  LM statistic  2.948140e+01
+1       p-value  3.964566e-07
+2       F-value  1.702992e+01
+3    F: p-value  1.506829e-07
+Given that the p-value is less than the chosen 0.05 significance level, we can conclude that the residuals are heteroskedastic.
+
+Another possible test could be the White Test.
+
+aux_mat = sm.add_constant(np.column_stack((x1, x1**2, x2, x2**2, x1*x2)))
+W_t = sm_diagnostic.het_white(resid = mdl_1.fit().resid, exog = aux_mat)
+print(pd.DataFrame(lzip(['LM statistic', 'p-value',  'F-value', 'F: p-value'], W_t)))
+              0          1
+0  LM statistic  41.027547
+1       p-value   0.000176
+2       F-value   3.410338
+3    F: p-value   0.000063
+From the above p-value of less than the chosen 0.05 significance level, we can again conclude and reject the hypothesis, and conclude that the residuals are heteroskedastic.
+
+Damage: Clear statement of the damage caused by Heteroskedascity
+
+A few key problems caused by heteroskedacity include:
+
+Estimators will not be less useful, because OLS will not produce the estimator holding the smallest variances > Lower precision resulting in in coefficient estimates being further from the correct population value
+Too high or too low significance tests due to OLS not being able to detect the increase in the variance of the coefficient estimates (this results in an underestimated amount of variance calculated in the t-values and F-values calculation of the OLS) > This can lead to false positive conclusion that a model is statistically significant
+Biased standard errors which result in erroneous test statistics or confidence intervals ran by the model
+Directions: Necessary steps to alleviate the problem of Heteroskedascity
+
+There are two common ways to alleviate the problem of heteroscedasticity.
+
+The first method is the Log Transformation – based on the logarithmic data transformation
+
+This function can help to convert a data range into a closer distance
+We can do this by inputting a numpy command and implement the Breusch-Pagan test, and we will see it resulting in a p-value higher than before
+Note that this is to alleviate this problem but not entirely remove it; after this log transformation, there will be changes where the number is still below the significance level despite an increased p-value
+The second method is to use the Box-Cox Transformation
+
+This function is used to equalise the residual variance, and is principled on the power transformation of data
+We can do this by inputting boxcox module in scipy.stats and set its lambda’s default value as zero (0)
+We will see the p-value is greater than the significance level, signifying that we have succeeded in removing the problem of heteroskedasticity in our data
+2. Over-reliance on Normal Data
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import statsmodels.api as sm
+import plotly.express as px
+import plotly.figure_factory as ff
+from copulas.multivariate import GaussianMultivariate
+import pandas_datareader.data as web
+import matplotlib.pyplot as plt
+from ipywidgets import HBox, VBox
+from scipy.optimize import fmin, minimize
+from scipy.stats import t
+from scipy.stats import norm
+from math import inf
+​
+import bs4 as bs
+import requests
+import yfinance as yf
+import datetime
+​
+from scipy.stats import gamma
+from scipy.stats import norm
+from scipy.stats import t
+from scipy.stats import beta
+import matplotlib.pyplot as plt
+Let us pull some data from yahoo finance, just to show how difficult/unpredicatable data is.
+
+start = datetime.date(2018, 1, 1)
+end = datetime.date(2022, 9, 1)
+data_set= web.DataReader(["^GSPC"], "yahoo", start, end)["Adj Close"]
+data_set = data_set.rename(columns={"^GSPC": "SP500"})
+data_set.dropna()
+y = data_set["SP500_R"] = np.log(data_set.SP500) - np.log(data_set.SP500.shift(1))
+y.head()
+Date
+2018-01-02         NaN
+2018-01-03    0.006378
+2018-01-04    0.004021
+2018-01-05    0.007009
+2018-01-08    0.001661
+Name: SP500, dtype: float64
+ # Plot distribution of data
+plt.figure(figsize=(7, 7))
+plt.title("Histogram of SP500 returns")
+sns.histplot(y, kde=True)
+plt.show()
+
+We can see that data does look normally distributed. Let us investigate further
+
+# Plot QQ-plot
+import pylab
+from scipy import stats
+plt.figure(figsize=(7, 7))
+stats.probplot(y, dist="norm", plot=pylab)
+pylab.show()
+
+Here our SP500 returns do seam to be normally distributed. But those tails do cause some concern and hence we need to investigate further.
+
+# Shapiro Wilk normality test
+shapiro_test = stats.shapiro(data_set["SP500_R"][1:])
+shapiro_test
+ShapiroResult(statistic=0.8586571216583252, pvalue=3.3409801697545586e-31)
+Our Shapiro test failed and hence our data is not normally distributed. Meaning our next option here could be to use the Box and Cox method of transforming non-normal data to normal data. But that does require more work
+
+Lets have a look at Copulas, we will generate data to demonstrate our theory points
+
+np.random.seed(seed=5)
+mean = [0,0]
+rho = 0.8
+cov = [[1,rho],[rho,1]] # diagonal covariance, points lie on x or y-axis
+​
+norm_1,norm_2 = np.random.multivariate_normal(mean,cov,1000).T
+unif_1 = norm.cdf(norm_1)
+unif_2 = norm.cdf(norm_2)
+norm_data = pd.concat([pd.DataFrame(norm_1), pd.DataFrame(norm_2)], axis=1)
+norm_data.columns = ['X', 'Y']
+norm_data.corr()
+X	Y
+X	1.000000	0.803551
+Y	0.803551	1.000000
+fig = px.scatter(norm_data, x = 'X', y='Y', width=700, height=500, trendline='ols', trendline_color_override='DeepPink', marginal_x='histogram', marginal_y='histogram', title='Bi-Variate Normal')
+fig.show()
+
+With normally distributed data, we see a nice smooth OLS line for analysis.
+
+Now let us a copula but this time with non-normal data. We will use a copula to try to work out the correlation between time spent on Amazon, and money spent.
+
+# we are going to make some dummy variable
+website_time = pd.DataFrame(gamma.ppf(unif_1, a=2, scale=5))
+website_spend =  pd.DataFrame(beta.ppf(unif_2,a=0.5, b=0.5, loc=5, scale=100))
+join_time_spend = pd.concat([website_time, website_spend], axis=1)
+join_time_spend.columns = ['Time', 'Cash']
+gamma_dist  = ff.create_distplot([website_time.values.reshape(-1)], group_labels = [' '])
+gamma_dist.update_layout(showlegend=False, title_text='Time Spent on Website', width=1000, height=500)
+gamma_dist.show()
+
+From the above graph, we can see that most time spent by the most amount of people peaks at around 5 mins. Interestingly, we have an outlier where we have 1 person who spent 50 mins according to our data here.
+
+So we are trying to understand a simple concept, if someone spends more time on the website, do they spend more time
+
+Dollars spent on website
+
+t_dist  = ff.create_distplot([website_spend.values.reshape(-1)], group_labels = [' '])
+t_dist.update_layout(showlegend=False, title_text='Dollars Spent on Website', width=1000, height=500)
+t_dist.show()
+Here we see that most people who hop onto the website dont spend a dime
+
+Scatter plot of time spent on website vs $$ spent
+
+fig = px.scatter(join_time_spend, x = 'Time', y='Cash', width=1000, height=500,  range_y=[0,110], trendline='ols', trendline_color_override='DeepPink',  marginal_x='histogram', marginal_y='histogram')
+fig.show()
+
+The relationship here is not linear. And the marginal distributions were certaintly not normal.
+
+This is the issue with not dealing with data that is not normal.
+
+Dealing with the situation
+
+time_cdf =  pd.DataFrame(gamma.cdf(website_time.values, a = 2, scale=5))
+time_cdf_vs_original = pd.concat([time_cdf, website_time], axis=1)
+time_cdf_vs_original.columns = ['CDF', 'Original']
+​
+time_cdf_vs_original_plot = px.scatter(time_cdf_vs_original, x = 'Original', y='CDF', width=1000, height=500, title='Gamma Cumulative Distribution Function for Time',  marginal_x='histogram', marginal_y='histogram')
+time_cdf_vs_original_plot.show()
+
+The CDF allows us to map the input observations from our data into a space that goes from 0 to 1. We have transformed the variable from the original data space to uniform data set like we can see below
+
+time_cdf =  pd.DataFrame(gamma.cdf(website_time.values, a = 2, scale=5))
+time_cdf_plot  = ff.create_distplot([time_cdf.values.reshape(-1)], group_labels = [' '], show_curve=False, bin_size=0.05)
+time_cdf_plot.update_layout(showlegend=False, title_text='Uniform distribution of time spent on site', width=1000, height=500)
+time_cdf_plot.show()
+
+dollar_cdf = pd.DataFrame(beta.cdf(website_spend.values,a=0.5, b=0.5, loc=5, scale=100))
+dollar_cdf_vs_original = pd.concat([dollar_cdf, website_spend], axis=1)
+dollar_cdf_vs_original.columns = ['CDF', 'Original']
+​
+dollar_cdf_vs_original_plot = px.scatter(dollar_cdf_vs_original, x = 'Original', y='CDF', width=1000, height=500, title='Beta Cumulative Distribution Function for Dollars Spent',  marginal_x='histogram', marginal_y='histogram')
+dollar_cdf_vs_original_plot.show()
+
+join_time_spend_uniform = pd.concat([dollar_cdf, time_cdf], axis=1)
+join_time_spend_uniform.columns = ['Time', 'Cash']
+​
+time_v_money_uniform = px.scatter(join_time_spend_uniform, x = 'Time', y='Cash', width=1000, height=500,  marginal_x='histogram', marginal_y='histogram', title='Dollars vs Time in Copula Space', trendline='ols', trendline_color_override='DeepPink', )
+time_v_money_uniform.show()
+
+Now if we are to hover our mouse on the red line in the first scatter plot we get an R-squared value of about 0.52. Now if we are to do the same here we get an R-squared of about 0.62. This means by transforming our non-normal data we have managed to fined a line of best fit and form some sort of relationship in our example.
+
+3. Autocorrelations
+Libraries
+import numpy as np import matplotlib.pyplot as plt import datetime import yfinance as yf import pandas_datareader.data as web from scipy import stats import statsmodels.api as sm from pmdarima.arima import auto_arima from statsmodels.tsa.arima.model import ARIMA plt.rcParams["figure.figsize"] = (14, 8)
+
+start = datetime.date(2018, 1, 1) end = datetime.date(2022, 9, 1) data_set= web.DataReader(["^GSPC"], "yahoo", start, end)["Adj Close"] data_set = data_set.rename(columns={"^GSPC": "SP500"}) data_set["SP500_R"] = np.log(data_set.SP500) - np.log(data_set.SP500.shift(1)) data_set = data_set.iloc[1:, ]
+
+Let  {𝑧𝑡}  be a time series that has a finite variance, Where  𝑡=1,2,…,𝑚 , then autocovariance function is defined as
+𝛾𝑧(𝑠,𝑡)=𝑐𝑜𝑣(𝑧𝑠,𝑧𝑡)=𝐸[(𝑧𝑠−𝜇𝑧𝑠)(𝑧𝑡−𝜇𝑧𝑡)],∀𝑠,𝑡
+ 
+where,  𝜇𝑧𝑡  is the mean function of the time series  {𝑧𝑡} .
+
+Similarly, the autocorrelation function ACF is defined by
+𝜌𝑧(𝑠,𝑡)=𝛾𝑧(𝑠,𝑡)𝛾𝑧(𝑠,𝑠)𝛾𝑧(𝑡,𝑡)⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯√=𝛾𝑧(𝑠,𝑡)𝜎2𝑧𝑠𝜎2𝑧𝑡⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯√
+ 
+Properties of autocovariance and autocorrelation function
+
+Both autocovariance and autocorrelation functions only measures the linear relationship between  𝑧𝑠  and  𝑧𝑡 .
+𝛾𝑧(𝑠,𝑡)=𝛾𝑧(𝑡,𝑠) 
+When  𝑡=𝑠 , the autocovariance becomes variance of  𝑧𝑡 .
+The value of  𝜌𝑧(𝑠,𝑡)  is between -1 and 1.
+For stationary process,  𝛾𝑧(𝑡−ℎ,𝑡)=𝛾𝑧(ℎ)  is the same at time  𝑡 . It only depends on the distance between two time intervals. Thus
+𝜌𝑧(𝑡−ℎ,𝑡)=𝛾𝑧(ℎ)𝛾𝑧(0)
+ 
+Partial autocorrelation
+If we want to measure the pure correlation between  𝑧𝑡  and  𝑧𝑡−𝑘  without considering the correlation explained by  𝑧𝑡−1,𝑧𝑡−2,…,𝑧𝑡−𝑘+1 , then we use the partial autocorrelation function which is a conditional correlation and written as
+𝜙𝑧(𝑡,𝑡−𝑘|𝑡−1,𝑡−2,…,𝑡−𝑘+1)=𝛾𝑧(𝑡,𝑡−𝑘|𝑡−1,𝑡−2,…,𝑡−𝑘+1)𝜎2𝑧𝑡𝜎2𝑧𝑡−𝑘⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯√
+ 
+We will demonstrate autocorrelatoins and partial autocorrelations using S & P 500 stock price.
+
+Fig 1: Time series Plot for S&P 500 Stock Price from 2018 to 2022
+
+plt.plot(data_set.SP500)
+plt.xlabel("Year")
+plt.ylabel("S&P 500 Stock Price")
+plt.savefig('sp_price')
+plt.show()
+
+ACF and PACF plots
+The autocorrelation function is used to detect trends and check for randomness of a time series by looking at ACF and PACF plots. They are also important to determine the order of AR, MA, and ARMA models.
+
+Fig 2: ACF and PACF Plot for S&P 500 Stock Price with lag 30
+
+fig, ax = plt.subplots(1, 2, figsize=(12,4))
+sm.graphics.tsa.plot_acf(data_set["SP500"], title="ACF S&P 500 stock price", lags=30,ax=ax[0] )
+sm.graphics.tsa.plot_pacf(data_set["SP500"], title="PACF S&P 500 stock price", lags=30,ax=ax[1] )
+plt.savefig('acf')
+plt.show()
+/opt/conda/lib/python3.9/site-packages/statsmodels/graphics/tsaplots.py:348: FutureWarning: The default method 'yw' can produce PACF values outside of the [-1,1] interval. After 0.13, the default will change tounadjusted Yule-Walker ('ywm'). You can use this method now by setting method='ywm'.
+  warnings.warn(
+
+4. Nonstationarity
+Weak stationarity
+Let  {𝑧𝑡}  be a time series with finite variance.  {𝑧𝑡}  is said to be stationary if it satisfies the following conditions:
+
+The mean function  𝜇𝑧(𝑡)=𝐸(𝑧𝑡)  is constant and independent of  𝑡 
+Autocovariance  𝛾𝑧(𝑡−ℎ,𝑡)  is independent of  𝑡  for each  ℎ .
+In addition to above two conditions if every finite joint probability distribtions of  {𝑧𝑡}  satisfies
+𝑃{𝑧𝑡1≤𝑐1,𝑧𝑡2≤𝑐2,…,𝑧𝑡𝑘≤𝑐𝑘}=𝑃{𝑧𝑡1+ℎ≤𝑐1,𝑧𝑡2+ℎ≤𝑐2,…,𝑧𝑡𝑘+ℎ≤𝑐𝑘}
+ 
+then we call the time series  {𝑧𝑡}  is strictly stationary. If we relax the conditions of stationary time series we will get non-stationary time series.
+A time series with trends, or seasonality are non-stationary.
+Non-stationary time series can be identified by using ACF and PACF plots. If ACF decreases gradually, then it means that there is a trend in the series and the time series is non-stationary. From Fig 2 we see that the ACF plot of S & P 500 stock price shows a slow decreasing trend, which implies there is a trend in the time series.
+
+A trend in time series can be removed by using differencing method, and run regression with trend variable.
+
+Fig 3: First order Differencing of S&P 500 Stock Price
+
+plt.plot(data_set.SP500.diff().dropna())
+plt.xlabel("Year")
+plt.ylabel("First order Difference of S&P 500 Stock")
+plt.savefig('firstdiff')
+plt.show()
+
+Now from figure 3, it can be observed that the differenced time series oscillates around  0 . But, the variance is not constant. Let us transform the S & P 500 stock price by using logarithm and apply the first differencing method. Figure 4 shows the result.
+
+Fig 4: First order Differencing of log of S&P 500 Stock Price
+
+# Plot First Differencing of Log of S&P 500 Stock Price
+plt.plot(np.log(data_set.SP500).diff().dropna())
+plt.xlabel("Year")
+plt.ylabel("First Difference of Log of Google Stock")
+plt.savefig('logSP')
+plt.show()
+
+From fig 4 we see that the log transformation minimizes the variation.
+
+Fig 5: ACF and PACF for differenced S&P 500 Stock Price
+
+# ACF and PACF Plots for First Difference of Logged S&P 500 Stock Price
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+sm.graphics.tsa.plot_acf(
+    np.log(data_set.SP500).diff().dropna(),
+    lags=30,
+    ax=ax1,
+)
+sm.graphics.tsa.plot_pacf(
+    np.log(data_set.SP500).diff().dropna(),
+    lags=30,
+    ax=ax2,
+)
+plt.savefig('logACF')
+plt.show()
+/opt/conda/lib/python3.9/site-packages/statsmodels/graphics/tsaplots.py:348: FutureWarning: The default method 'yw' can produce PACF values outside of the [-1,1] interval. After 0.13, the default will change tounadjusted Yule-Walker ('ywm'). You can use this method now by setting method='ywm'.
+  warnings.warn(
+
+ARIMA Model
+Non stationary time series can be modeled by autoregressive integrated moving average (ARIMA). ARIMA is a the combination of differencing method with autoregressive moving average (ARMA) model. ARMA only handles stationary process. In ARIMA model, differencing method is integrated into ARMA model to remove trends in non stationary time series. The general form of ARIMA model for a time series  {𝑧𝑡}  can be written as follows:
+
+𝑧𝑑𝑡=𝛼1𝑧𝑑𝑡−1+𝛼2𝑧𝑑𝑡−2+⋯+𝛼𝑝𝑧𝑑𝑡−𝑝+𝜃1𝑊𝑡−1+𝜃2𝑊𝑡−2+⋯+𝜃𝑞𝑊𝑡−𝑞+𝑊𝑡
+ 
+Where  𝑧𝑑𝑡=(1−𝐵)𝑑𝑧𝑡  and  𝑑  is order of a difference.
+We can rewrite the model as:
+𝛼(𝐵)(1−𝐵)𝑑𝑧𝑡=𝜃(𝐵)𝑊𝑡
+ 
+If  𝑝  is the order of the Autoregression part,  𝑑  is the degree of differencing and  𝑞  is the order of the Moving average, then the above equation is called ARIMA( 𝑝,𝑑,𝑞 ).
+
+# Efficient ARIMA model Selection
+mod_auto = auto_arima(
+    np.log(data_set.SP500).dropna(),  # stepwise=False,
+    start_p=0,
+    start_d=0,
+    start_q=0,
+    max_p=3,
+    max_d=3,
+    max_q=3,
+    trace=True,
+    with_intercept=False,
+    return_valid_fits=True,
+)
+Performing stepwise search to minimize aic
+ ARIMA(0,1,0)(0,0,0)[0]             : AIC=-6740.101, Time=0.05 sec
+ ARIMA(1,1,0)(0,0,0)[0]             : AIC=-6783.688, Time=0.18 sec
+ ARIMA(0,1,1)(0,0,0)[0]             : AIC=-6774.468, Time=0.60 sec
+ ARIMA(2,1,0)(0,0,0)[0]             : AIC=-6795.582, Time=0.48 sec
+ ARIMA(3,1,0)(0,0,0)[0]             : AIC=-6795.259, Time=1.31 sec
+ ARIMA(2,1,1)(0,0,0)[0]             : AIC=-6792.936, Time=0.79 sec
+ ARIMA(1,1,1)(0,0,0)[0]             : AIC=-6789.586, Time=1.30 sec
+ ARIMA(3,1,1)(0,0,0)[0]             : AIC=-6792.800, Time=2.60 sec
+ ARIMA(2,1,0)(0,0,0)[0] intercept   : AIC=-6794.363, Time=0.80 sec
+
+Best model:  ARIMA(2,1,0)(0,0,0)[0]          
+Total fit time: 8.125 seconds
+# Best ARIMA Model for S&P 500 stock price
+mod = ARIMA(
+    np.log(data_set.SP500), order=(2, 1, 0), trend="n"
+).fit()  # This is the best model in Python implementation
+print(mod.summary())
+/opt/conda/lib/python3.9/site-packages/statsmodels/tsa/base/tsa_model.py:471: ValueWarning: A date index has been provided, but it has no associated frequency information and so will be ignored when e.g. forecasting.
+  self._init_dates(dates, freq)
+/opt/conda/lib/python3.9/site-packages/statsmodels/tsa/base/tsa_model.py:471: ValueWarning: A date index has been provided, but it has no associated frequency information and so will be ignored when e.g. forecasting.
+  self._init_dates(dates, freq)
+/opt/conda/lib/python3.9/site-packages/statsmodels/tsa/base/tsa_model.py:471: ValueWarning: A date index has been provided, but it has no associated frequency information and so will be ignored when e.g. forecasting.
+  self._init_dates(dates, freq)
+                               SARIMAX Results                                
+==============================================================================
+Dep. Variable:                  SP500   No. Observations:                 1175
+Model:                 ARIMA(2, 1, 0)   Log Likelihood                3400.791
+Date:                Mon, 19 Sep 2022   AIC                          -6795.582
+Time:                        11:45:51   BIC                          -6780.378
+Sample:                             0   HQIC                         -6789.849
+                               - 1175                                         
+Covariance Type:                  opg                                         
+==============================================================================
+                 coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+ar.L1         -0.1742      0.012    -14.100      0.000      -0.198      -0.150
+ar.L2          0.1086      0.012      9.299      0.000       0.086       0.131
+sigma2         0.0002   2.87e-06     62.105      0.000       0.000       0.000
+===================================================================================
+Ljung-Box (L1) (Q):                   0.03   Jarque-Bera (JB):              7032.76
+Prob(Q):                              0.87   Prob(JB):                         0.00
+Heteroskedasticity (H):               1.41   Skew:                            -0.94
+Prob(H) (two-sided):                  0.00   Kurtosis:                        14.84
+===================================================================================
+
+Warnings:
+[1] Covariance matrix calculated using the outer product of gradients (complex-step).
+Fig 6: Diagnostics report for ARIMA(2,1,0) model
+
+mod.plot_diagnostics()
+plt.savefig('diagnostic')
+plt.show()
+
+Ljung-Box test
+We can use Ljung-Box test to check whether autocorrelation exists in a time series. The hypothesis for Ljung-Box test are
+
+𝐻0 : residuals are independently distributed.
+𝐻1 : residuals are not independently distributed and exhibits serial correlation.
+
+Fig 7: Ljung-Box test for no serial correlation of standardized residuals
+
+# Ljung-Box test for no serial correlation of standardized residuals
+lb_test = mod.test_serial_correlation(
+    method="ljungbox", df_adjust=True, lags=None
+)
+​
+# plot Ljung-Box test p-values and 0.05 significance line
+plt.figure(figsize=(14, 2))
+plt.plot(lb_test[0][1], linestyle="", marker="o")
+plt.axhline(y=0.05, color="blue", linestyle="--")
+#plt.title("p-values for Ljung-Box statistic")
+plt.grid()
+plt.savefig('lb')
+plt.show()
+
+Fig 7 shows lags less than 5 are not significant. There are autocorrelations after lag 5 from Ljung-Box test.

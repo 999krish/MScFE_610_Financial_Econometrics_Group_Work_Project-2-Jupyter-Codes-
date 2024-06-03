@@ -119,6 +119,12 @@ The second method is to use the Box-Cox Transformation
 This function is used to equalise the residual variance, and is principled on the power transformation of data
 We can do this by inputting boxcox module in scipy.stats and set its lambda’s default value as zero (0)
 We will see the p-value is greater than the significance level, signifying that we have succeeded in removing the problem of heteroskedasticity in our data
+
+----------------------------------------***********************---------------------------------------------------
+
+
+
+
 2. Over-reliance on Normal Data
 import pandas as pd
 import numpy as np
@@ -267,6 +273,9 @@ time_v_money_uniform.show()
 
 Now if we are to hover our mouse on the red line in the first scatter plot we get an R-squared value of about 0.52. Now if we are to do the same here we get an R-squared of about 0.62. This means by transforming our non-normal data we have managed to fined a line of best fit and form some sort of relationship in our example.
 
+--------------------------------------------------------------------------------------------------------------------------------
+
+
 3. Autocorrelations
 Libraries
 import numpy as np import matplotlib.pyplot as plt import datetime import yfinance as yf import pandas_datareader.data as web from scipy import stats import statsmodels.api as sm from pmdarima.arima import auto_arima from statsmodels.tsa.arima.model import ARIMA plt.rcParams["figure.figsize"] = (14, 8)
@@ -316,6 +325,15 @@ plt.savefig('acf')
 plt.show()
 /opt/conda/lib/python3.9/site-packages/statsmodels/graphics/tsaplots.py:348: FutureWarning: The default method 'yw' can produce PACF values outside of the [-1,1] interval. After 0.13, the default will change tounadjusted Yule-Walker ('ywm'). You can use this method now by setting method='ywm'.
   warnings.warn(
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
 
 4. Nonstationarity
 Weak stationarity
